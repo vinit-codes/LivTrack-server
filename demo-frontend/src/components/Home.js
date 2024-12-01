@@ -1,34 +1,57 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate for navigation
 import "./Home.css";
 
 function Home() {
   const [selectedMetric, setSelectedMetric] = useState(null);
+  const [metricData, setMetricData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null); // Error state to handle API errors
+  const navigate = useNavigate(); // Initialize useNavigate hook
 
-  const metricsData = {
-    Cholesterol: "Cholesterol level is 190 mg/dL. Maintain a healthy diet.",
-    Blood: "Blood pressure is 120/80 mmHg. All readings are normal.",
-    "Eye Reports": "Vision is normal. No signs of cataracts or glaucoma.",
+  const mockData = {
+    Cholesterol: [
+      { date: "2024-11-01", value: 190 },
+      { date: "2024-11-05", value: 195 },
+      { date: "2024-11-10", value: 180 },
+    ],
+    Blood: [
+      { date: "2024-11-01", value: 120 },
+      { date: "2024-11-05", value: 118 },
+      { date: "2024-11-10", value: 122 },
+    ],
+    EyeReports: [
+      { date: "2024-11-01", value: "Normal" },
+      { date: "2024-11-05", value: "Normal" },
+      { date: "2024-11-10", value: "Normal" },
+    ],
   };
 
   const handleMetricClick = (metric) => {
     setSelectedMetric(metric);
+    setLoading(true);
+    setError(null); // Clear previous error message
+
+    // Simulate data fetching (replace axios call with mock data)
+    setTimeout(() => {
+      const data = mockData[metric];
+      setMetricData(data);
+      setLoading(false);
+
+      // Navigate to Analytics page and pass the metric and data as state
+      navigate("/analytics", { state: { metric, data } });
+    }, 1000); // Simulate a 1 second delay for fetching data
   };
 
   return (
     <div className="home">
-  
-      {/* Health Metrics Title and Logo */}
       <div className="metrics-header">
         <img src="/icons/healthmet.jpeg" alt="Health Metrics Logo" />
       </div>
 
-      {/* Metrics Cards in Triangle Layout */}
       <div className="metrics-triangle">
         <div className="top-row">
-          <div
-            className="metric-card"
-            onClick={() => handleMetricClick("Cholesterol")}
-          >
+          <div className="metric-card" onClick={() => handleMetricClick("Cholesterol")}>
             <img src="/icons/chloe.jpeg" alt="Cholesterol" />
             <span>Cholesterol</span>
           </div>
@@ -38,25 +61,12 @@ function Home() {
           </div>
         </div>
         <div className="bottom-row">
-          <div
-            className="metric-card"
-            onClick={() => handleMetricClick("Eye Reports")}
-          >
+          <div className="metric-card" onClick={() => handleMetricClick("EyeReports")}>
             <img src="/icons/vision_2662920.png" alt="Eye Reports" />
             <span>Eye Reports</span>
           </div>
         </div>
       </div>
-
-      {/* Selected Metric Data */}
-      {selectedMetric && (
-        <div className="metric-data-container">
-          <div className="metric-data">
-            <h2>{selectedMetric}</h2>
-            <p>{metricsData[selectedMetric]}</p>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
