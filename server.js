@@ -1,9 +1,11 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
+const cors = require("cors"); // Import CORS
 const authRoutes = require("./routes/authRoutes"); // Routes for Authentication
-const ocrRoutes = require('./routes/ocrRoutes'); //  Routes for ocr
+const ocrRoutes = require("./routes/ocrRoutes"); // Routes for OCR
 const healthRoutes = require("./routes/healthRoutes"); // Routes for health metrics (Eye, Cholesterol, Blood Test)
+
 // Load environment variables
 dotenv.config({ path: "./.env" });
 
@@ -18,6 +20,15 @@ const app = express();
 
 // Middleware to parse JSON requests
 app.use(express.json());
+
+// Enable CORS
+app.use(
+  cors({
+    origin: "http://localhost:3000", // Replace with your frontend's URL
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true, // Enable cookies or credentials if needed
+  })
+);
 
 // Connect to MongoDB
 mongoose
@@ -51,3 +62,4 @@ const port = process.env.PORT || 5001;
 app.listen(port, () => {
   console.log(`App running on port ${port}...`);
 });
+
