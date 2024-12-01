@@ -11,6 +11,6 @@ export const getAuthToken = () => {
 };
 
 export const isAuthenticated = () => {
-  return !!getAuthToken();
+  return !!getAuthToken(); // Returns true if the token exists
 };
 

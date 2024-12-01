@@ -1,16 +1,15 @@
 import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import Register from "./components/Register";
-import Header from "./components/Header";
-import Home from "./components/Home";
-import NavBar from "./components/NavBar";
+import AuthPage from "./pages/AuthPage"; // Authentication Page
+import Home from "./components/Home"; // Home Page
+import Header from "./components/Header"; // Header
+import NavBar from "./components/NavBar"; // Navigation Bar
 import "./App.css";
 
 function App() {
-  // State to track if the user is authenticated
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Handle successful authentication (login or registration)
+  // Handle successful login or registration
   const handleAuthentication = () => {
     setIsAuthenticated(true);
   };
@@ -19,34 +18,36 @@ function App() {
     <Router>
       <div className="App">
         <Routes>
-          {/* Public Route for Register/Login */}
-          {!isAuthenticated && (
-            <Route
-              path="/"
-              element={<Register onAuthentication={handleAuthentication} />}
-            />
-          )}
+          {/* Public Route for AuthPage (login/signup) */}
+          <Route
+            path="/"
+            element={
+              isAuthenticated ? (
+                <Navigate to="/home" replace />
+              ) : (
+                <AuthPage onAuthentication={handleAuthentication} />
+              )
+            }
+          />
 
-          {/* Protected Routes */}
-          {isAuthenticated && (
-            <>
-              <Route
-                path="/home"
-                element={
-                  <>
-                    <Header />
-                    <Home />
-                    <NavBar />
-                  </>
-                }
-              />
-              {/* Redirect all undefined routes to the home page */}
-              <Route path="*" element={<Navigate to="/home" />} />
-            </>
-          )}
+          {/* Protected Route for Home Page */}
+          <Route
+            path="/home"
+            element={
+              isAuthenticated ? (
+                <>
+                  <Header />
+                  <Home />
+                  <NavBar />
+                </>
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
 
-          {/* Redirect unauthenticated users to the login page */}
-          {!isAuthenticated && <Route path="*" element={<Navigate to="/" />} />}
+          {/* Catch-All Route */}
+          <Route path="*" element={<Navigate to={isAuthenticated ? "/home" : "/"} replace />} />
         </Routes>
       </div>
     </Router>
