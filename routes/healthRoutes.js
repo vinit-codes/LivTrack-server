@@ -3,6 +3,7 @@ const router = express.Router();
 const eyeMetricsController = require("../healthControllers/eyeMetricsController");
 const cholesterolMetricsController = require("../healthControllers/cholesterolMetricsController");
 const bloodMetricsController = require("../healthControllers/bloodMetricsController");
+const pcosController = require("../healthControllers/pcosController");
 const authMiddleware = require("../middleware/authMiddleware"); // Assuming you have an auth middleware
 
 // Eye Metrics Routes
@@ -55,5 +56,11 @@ router.put(
   authMiddleware.protect,
   bloodMetricsController.updateBloodMetrics
 );
+
+//PCOS Metrcis Routes
+router.post("/pcos-metrics", authMiddleware.protect, pcosController.addPcosMetrics);
+router.get("/pcos-metrics", authMiddleware.protect, pcosController.getPcosMetrics);
+router.patch("/pcos-metrics/:id", authMiddleware.protect, pcosController.updatePcosMetrics);
+router.delete("/pcosmetrics/:id", authMiddleware.protect, pcosController.deletePcosMetrics);
 
 module.exports = router;
