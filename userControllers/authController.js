@@ -29,3 +29,49 @@ exports.loginUser = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+// For dashBord
+exports.getProfile = async (req, res) => {
+  try {
+    // Extract the token from the Authorization header
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) {
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: Token is missing" });
+    }
+
+    // Verify the JWT token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET); // Use your actual JWT secret here
+
+    // Fetch the user from the database using the ID from the decoded token
+    const user = await User.findById(decoded.id, "name email");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Return the user details
+    res.status(200).json({
+      name: user.name,
+      email: user.email,
+    });
+  } catch (error) {
+    console.error("Error in getProfile:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/////
+
+// exports.getProfile = (req, res) => {
+//   try {
+//     const user = req.user; // Use user attached by middleware
+//     res.status(200).json({
+//       message: "Welcome to the dashboard",
+//       user: { name: user.name, email: user.email },
+//     });
+//   } catch (error) {
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };

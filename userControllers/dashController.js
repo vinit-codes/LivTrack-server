@@ -14,7 +14,7 @@ const getProfile = async (req, res) => {
     }
 
     // Verify the token
-    const decoded = jwt.verify(token, "your_secret_key"); // Replace with your actual JWT secret
+    const decoded = jwt.verify(token, "vineeth10"); // Replace with your actual JWT secret
 
     // Fetch the user from the database
     const user = await User.findOne({ email: decoded.email }, "name email");
