@@ -3,11 +3,25 @@ const bcrypt = require("bcryptjs");
 const User = require("../userModels/userModel");
 
 exports.registerUser = async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, age, weight, height } = req.body;
   try {
+    // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ name, email, password: hashedPassword });
+
+    // Create a new user with age, weight, and height
+    const newUser = new User({
+      name,
+      email,
+      password: hashedPassword,
+      age,
+      weight,
+      height,
+    });
+
+    // Save the new user to the database
     await newUser.save();
+
+    // Return success message
     res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -30,7 +44,6 @@ exports.loginUser = async (req, res) => {
   }
 };
 
-// For dashBord
 exports.getProfile = async (req, res) => {
   try {
     // Extract the token from the Authorization header
@@ -45,33 +58,25 @@ exports.getProfile = async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET); // Use your actual JWT secret here
 
     // Fetch the user from the database using the ID from the decoded token
-    const user = await User.findById(decoded.id, "name email");
+    const user = await User.findById(
+      decoded.id,
+      "name email age weight height"
+    );
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Return the user details
+    // Return the user details, including age, weight, and height
     res.status(200).json({
       name: user.name,
       email: user.email,
+      age: user.age,
+      weight: user.weight,
+      height: user.height,
     });
   } catch (error) {
     console.error("Error in getProfile:", error.message);
     res.status(500).json({ message: "Server error" });
   }
 };
-
-/////
-
-// exports.getProfile = (req, res) => {
-//   try {
-//     const user = req.user; // Use user attached by middleware
-//     res.status(200).json({
-//       message: "Welcome to the dashboard",
-//       user: { name: user.name, email: user.email },
-//     });
-//   } catch (error) {
-//     res.status(500).json({ message: "Server error" });
-//   }
-// };
