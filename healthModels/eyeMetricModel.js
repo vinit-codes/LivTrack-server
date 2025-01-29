@@ -1,32 +1,108 @@
 const mongoose = require("mongoose");
 
-// EYE MODEL
-const eyeMetricSchema = new mongoose.Schema({
+const eyeTestSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true,
   },
-  sph: {
-    type: Number, // Spherical value for glasses or lenses
-    required: true,
+  visualAcuity: {
+    rightEye: {
+      type: String, // e.g., "20/20"
+      required: true,
+    },
+    leftEye: {
+      type: String,
+      required: true,
+    },
+    withCorrection: {
+      type: String, // e.g., "20/20"
+      required: true,
+    },
   },
-  cyl: {
-    type: Number, // Cylindrical value for astigmatism
-    required: true,
+  intraocularPressure: {
+    rightEye: {
+      type: Number, // in mmHg
+      required: true,
+    },
+    leftEye: {
+      type: Number,
+      required: true,
+    },
   },
-  axis: {
-    type: Number, // Axis value in degrees (0–180)
-    required: true,
-    min: [0, "Axis cannot be less than 0 degrees"],
-    max: [180, "Axis cannot be more than 180 degrees"],
+  pupilReactivity: {
+    rightEye: {
+      type: String, // e.g., "Normal"
+      required: true,
+    },
+    leftEye: {
+      type: String,
+      required: true,
+    },
   },
-  date: {
-    type: Date, // Date when the measurement was taken
+  visualFieldTest: {
+    rightEye: {
+      type: String, // e.g., "Normal"
+      required: true,
+    },
+    leftEye: {
+      type: String,
+      required: true,
+    },
+  },
+  refraction: {
+    rightEye: {
+      sphere: {
+        type: Number, // in diopters
+        required: true,
+      },
+      cylinder: {
+        type: Number,
+        required: true,
+      },
+      axis: {
+        type: Number, // in degrees
+        required: true,
+      },
+    },
+    leftEye: {
+      sphere: {
+        type: Number,
+        required: true,
+      },
+      cylinder: {
+        type: Number,
+        required: true,
+      },
+      axis: {
+        type: Number,
+        required: true,
+      },
+    },
+  },
+  fundusExamination: {
+    rightEye: {
+      type: String, // e.g., "Normal"
+      required: true,
+    },
+    leftEye: {
+      type: String,
+      required: true,
+    },
+  },
+  testDate: {
+    type: Date,
     default: Date.now,
+  },
+  examiner: {
+    type: String, // Name of the examiner
+    required: true,
+  },
+  additionalNotes: {
+    type: String, // Any additional observations
   },
 });
 
-const EyeMetric = mongoose.model("EyeMetric", eyeMetricSchema);
+const EyeTestMetric = mongoose.model("EyeTestMetric", eyeTestSchema);
 
-module.exports = EyeMetric;
+module.exports = EyeTestMetric;

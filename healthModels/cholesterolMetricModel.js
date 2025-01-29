@@ -23,24 +23,42 @@ const cholesterolTestSchema = new mongoose.Schema({
       type: [Number],
       default: [],
     },
+    vldl: {
+      // Added field for Very Low-Density Lipoprotein (VLDL)
+      type: [Number],
+      default: [],
+    },
+    nonHdlCholesterol: {
+      // Added field for non-HDL cholesterol
+      type: [Number],
+      default: [],
+    },
   },
   units: {
     totalCholesterol: String,
     ldl: String,
     hdl: String,
     triglycerides: String,
+    vldl: String, // Added unit for VLDL
+    nonHdlCholesterol: String, // Added unit for non-HDL cholesterol
   },
   referenceRanges: {
     totalCholesterol: String,
     ldl: String,
     hdl: String,
     triglycerides: String,
+    vldl: String, // Added reference range for VLDL
+    nonHdlCholesterol: String, // Added reference range for non-HDL cholesterol
   },
   date: {
     type: Date,
     default: Date.now,
   },
   source: String,
+  testMethod: String, // Added field to store the method used for the test
+  reportGeneratedBy: String, // Added field to store who generated the report
+  reportComments: String, // Added field for any additional comments in the report
+  testLocation: String, // Added field for the location where the test was conducted
 });
 
 const CholesterolTestMetric = mongoose.model(
