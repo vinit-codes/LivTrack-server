@@ -1,7 +1,14 @@
-// const Tesseract = require("tesseract.js");
-// const { extractHealthParameters } = require("../utils/textParser"); // Import the helper function
+// const vision = require("@google-cloud/vision");
+// const fetch = require("node-fetch"); // For making HTTP requests to Hugging Face API
 
-// // Function to handle OCR processing and health parameter extraction
+// // Instantiates a client for Google Vision API
+// const client = new vision.ImageAnnotatorClient();
+
+// // Hugging Face API URL for Text Generation
+// const HUGGING_FACE_URL = "https://api-inference.huggingface.co/models/gpt2"; // Change to the appropriate Hugging Face model URL
+
+// const HUGGING_FACE_API_KEY = "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"; // Replace with your actual Hugging Face API key
+
 // const extractTextAndParameters = async (req, res) => {
 //   try {
 //     // Check if file exists
@@ -9,27 +16,48 @@
 //       return res.status(400).json({ error: "No file uploaded" });
 //     }
 
-//     // Process the image with Tesseract.js
-//     const result = await Tesseract.recognize(
-//       req.file.buffer, // Image buffer from multer
-//       "eng", // Language for OCR
-//       {
-//         logger: (m) => console.log(m), // Logs OCR progress
-//       }
-//     );
+//     // Convert image buffer to Base64
+//     const base64Image = req.file.buffer.toString("base64");
+//     const image = {
+//       content: base64Image,
+//     };
 
-//     // Extract text from OCR result
-//     const ocrText = result.data.text;
-//     // console.log("Extracted Text for Parameters:", ocrText);
+//     // Perform text detection using Google Vision API
+//     const [result] = await client.textDetection({ image });
+//     const ocrText = result.fullTextAnnotation
+//       ? result.fullTextAnnotation.text
+//       : "";
 
-//     // Extract health parameters from the OCR text
-//     const healthParameters = extractHealthParameters(ocrText);
-//     // console.log("Extracted Health Parameters:", healthParameters);
+//     // Log the extracted text
+//     console.log("Extracted Text:", ocrText);
 
-//     // Return the extracted text and health parameters
-//     res.status(200).json({ text: ocrText, healthParameters });
+//     // Send the extracted text to Hugging Face for further processing
+//     const response = await fetch(HUGGING_FACE_URL, {
+//       method: "POST",
+//       headers: {
+//         Authorization: `Bearer ${HUGGING_FACE_API_KEY}`, // Using the hardcoded Hugging Face API key
+//         "Content-Type": "application/json",
+//       },
+//       body: JSON.stringify({
+//         inputs: ocrText,
+//       }),
+//     });
+
+//     // Check if the response is successful
+//     if (!response.ok) {
+//       return res.status(500).json({ error: "Hugging Face API error" });
+//     }
+
+//     const data = await response.json();
+//     console.log("Hugging Face Response:", data);
+
+//     // Return the extracted text and insights from Hugging Face
+//     res.status(200).json({
+//       text: ocrText,
+//       hugggingFaceResponse: data,
+//     });
 //   } catch (error) {
-//     console.error("OCR Error:", error);
+//     console.error("Error:", error);
 //     res.status(500).json({ error: "Failed to extract text and parameters" });
 //   }
 // };
@@ -37,7 +65,8 @@
 // module.exports = {
 //   extractTextAndParameters,
 // };
-/////////////////
+
+//////////////
 
 const vision = require("@google-cloud/vision");
 const { extractHealthParameters } = require("../utils/textParser"); // Helper function to parse health data

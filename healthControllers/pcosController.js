@@ -71,3 +71,31 @@ exports.deletePcosMetrics = async (req, res) => {
     res.status(400).json({ status: "fail", message: err.message });
   }
 };
+
+exports.deletePcosMetric = async (req, res) => {
+  try {
+    const metric = await EyeMetric.findByIdAndDelete(req.params.id);
+    if (!metric) {
+      return res
+        .status(404)
+        .json({ status: "fail", message: "Metric not found" });
+    }
+    res.status(204).json({ status: "success", data: null }); // 204 means no content
+  } catch (err) {
+    res.status(400).json({ status: "fail", message: err.message });
+  }
+};
+exports.getUserHistory = async (req, res) => {
+  try {
+    const history = await EyeMetric.find({ user: req.user.id })
+      .sort({ createdAt: 1 }) // Sort by date (oldest to newest)
+      .select("createdAt cholesterol glucose bloodPressure"); // Fetch only relevant fields
+
+    res.status(200).json({
+      status: "success",
+      data: { history },
+    });
+  } catch (err) {
+    res.status(400).json({ status: "fail", message: err.message });
+  }
+};

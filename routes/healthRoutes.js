@@ -17,10 +17,22 @@ router.get(
   authMiddleware.protect,
   eyeMetricsController.getEyeMetrics
 );
+
 router.put(
   "/eye-metrics/:id",
   authMiddleware.protect,
   eyeMetricsController.updateEyeMetrics
+);
+router.get(
+  "/eye-metrics-graph",
+  authMiddleware.protect,
+  eyeMetricsController.getUserHistory
+);
+
+router.delete(
+  "/eye-metrics/:id",
+  authMiddleware.protect,
+  eyeMetricsController.deleteEyeMetric
 );
 
 // Cholesterol Metrics Routes
@@ -39,6 +51,16 @@ router.put(
   authMiddleware.protect,
   cholesterolMetricsController.updateCholesterolMetrics
 );
+router.delete(
+  "/cholesterol-metrics/:id",
+  authMiddleware.protect,
+  cholesterolMetricsController.deleteCholesterolMetric
+);
+router.get(
+  "/cholesterol-metrics",
+  authMiddleware.protect,
+  cholesterolMetricsController.getUserHistory
+);
 
 // Blood Metrics Routes
 router.post(
@@ -51,6 +73,16 @@ router.get(
   authMiddleware.protect,
   bloodMetricsController.getBloodMetrics
 );
+router.get(
+  "/blood-metrics-graph",
+  authMiddleware.protect,
+  bloodMetricsController.getUserHistory
+);
+router.delete(
+  "/blood-metrics/:id",
+  authMiddleware.protect,
+  bloodMetricsController.deleteBloodMetric
+);
 router.put(
   "/blood-metrics/:id",
   authMiddleware.protect,
@@ -58,9 +90,30 @@ router.put(
 );
 
 //PCOS Metrcis Routes
-router.post("/pcos-metrics", authMiddleware.protect, pcosController.addPcosMetrics);
-router.get("/pcos-metrics", authMiddleware.protect, pcosController.getPcosMetrics);
-router.patch("/pcos-metrics/:id", authMiddleware.protect, pcosController.updatePcosMetrics);
-router.delete("/pcosmetrics/:id", authMiddleware.protect, pcosController.deletePcosMetrics);
+router.post(
+  "/pcos-metrics",
+  authMiddleware.protect,
+  pcosController.addPcosMetrics
+);
+router.get(
+  "/pcos-metrics",
+  authMiddleware.protect,
+  pcosController.getPcosMetrics
+);
+router.patch(
+  "/pcos-metrics/:id",
+  authMiddleware.protect,
+  pcosController.updatePcosMetrics
+);
+router.delete(
+  "/pcosmetrics/:id",
+  authMiddleware.protect,
+  pcosController.deletePcosMetrics
+);
+router.get(
+  "/pcos-metrics",
+  authMiddleware.protect,
+  pcosController.getUserHistory
+);
 
 module.exports = router;
