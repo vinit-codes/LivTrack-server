@@ -5,6 +5,7 @@ const cors = require("cors"); // Import CORS
 const authRoutes = require("./routes/authRoutes"); // Routes for Authentication
 const ocrRoutes = require("./routes/ocrRoutes"); // Routes for OCR
 const healthRoutes = require("./routes/healthRoutes"); // Routes for health metrics (Eye, Cholesterol, Blood Test)
+const dashRoutes = require("./routes/dashRoutes");
 
 // Load environment variables
 dotenv.config({ path: "./.env" });
@@ -24,7 +25,7 @@ app.use(express.json());
 // Enable CORS
 app.use(
   cors({
-    origin: "http://localhost:3000", // Replace with your frontend's URL
+    origin: "http://localhost:5001", // Replace with your frontend's URL
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true, // Enable cookies or credentials if needed
   })
@@ -43,6 +44,13 @@ mongoose
     console.error("MongoDB connection error:", err);
   });
 
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  next();
+});
+
 // Basic route to check if the server is running
 app.get("/", (req, res) => {
   res.send("LivTrack API is running...");
@@ -56,10 +64,10 @@ app.use("/api/v1/ocr", ocrRoutes);
 
 // Use health routes for tracking metrics
 app.use("/api/v1/health", healthRoutes);
+app.use("/api/v1/dashBoard", dashRoutes);
 
-// Start the server
+// Start the servers
 const port = process.env.PORT || 5001;
 app.listen(port, () => {
   console.log(`App running on port ${port}...`);
 });
-
