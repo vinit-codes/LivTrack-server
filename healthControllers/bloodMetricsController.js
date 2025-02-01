@@ -19,7 +19,13 @@ exports.addBloodMetrics = async (req, res) => {
 // Get All Blood Metrics for a User
 exports.getBloodMetrics = async (req, res) => {
   try {
-    const metrics = await BloodMetric.find({ user: req.user.id });
+    let filter = { user: req.user.id };
+    if (req.query.date) {
+      filter.date = new Date(req.query.date); // Fetch by specific date
+    }
+
+    const metrics = await BloodMetric.find(filter);
+
     res.status(200).json({
       status: "success",
       data: { metrics },
@@ -35,7 +41,10 @@ exports.updateBloodMetrics = async (req, res) => {
     const updatedMetric = await BloodMetric.findByIdAndUpdate(
       req.params.id,
       req.body,
-      { new: true, runValidators: true } // Ensure model validation
+      {
+        new: true,
+        runValidators: true, // Ensure model validation
+      }
     );
     res.status(200).json({
       status: "success",
@@ -47,15 +56,37 @@ exports.updateBloodMetrics = async (req, res) => {
 };
 
 // Get User History for Graphing
-exports.getUserHistory = async (req, res) => {
+exports.getBloodMetricsGraph = async (req, res) => {
   try {
-    const history = await BloodMetric.find({ user: req.user.id })
-      .sort({ createdAt: 1 }) // Sort by date (oldest to newest)
-      .select("createdAt cholesterol glucose bloodPressure"); // Fetch only relevant fields
+    const data = await BloodMetric.aggregate([
+      {
+        $match: { user: mongoose.Types.ObjectId(req.user.id) }, // Get only user's data
+      },
+      { $sort: { date: 1 } }, // Sort by date (oldest to newest)
+      {
+        $project: {
+          date: {
+            $dateToString: { format: "%Y-%m-%d", date: "$date" }, // Convert date format
+          },
+          totalCholesterol: {
+            $arrayElemAt: ["$cholesterolLevels.totalCholesterol", -1],
+          },
+          ldl: { $arrayElemAt: ["$cholesterolLevels.ldl", -1] },
+          hdl: { $arrayElemAt: ["$cholesterolLevels.hdl", -1] },
+          triglycerides: {
+            $arrayElemAt: ["$cholesterolLevels.triglycerides", -1],
+          },
+          vldl: { $arrayElemAt: ["$cholesterolLevels.vldl", -1] },
+          nonHdlCholesterol: {
+            $arrayElemAt: ["$cholesterolLevels.nonHdlCholesterol", -1],
+          },
+        },
+      },
+    ]);
 
     res.status(200).json({
       status: "success",
-      data: { history },
+      data: { metrics: data },
     });
   } catch (err) {
     res.status(400).json({ status: "fail", message: err.message });

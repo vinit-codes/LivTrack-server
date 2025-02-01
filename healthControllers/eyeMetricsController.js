@@ -1,5 +1,7 @@
 const EyeMetric = require("../healthModels/eyeMetricModel");
+const mongoose = require("mongoose");
 
+// Add Eye Metrics
 exports.addEyeMetrics = async (req, res) => {
   try {
     const newMetric = await EyeMetric.create({
@@ -15,9 +17,14 @@ exports.addEyeMetrics = async (req, res) => {
   }
 };
 
+// Get Eye Metrics with optional date filtering
 exports.getEyeMetrics = async (req, res) => {
   try {
-    const metrics = await EyeMetric.find({ user: req.user.id });
+    const filter = { user: req.user.id };
+    if (req.query.date) {
+      filter.date = req.query.date;
+    }
+    const metrics = await EyeMetric.find(filter).sort({ date: 1 });
     res.status(200).json({
       status: "success",
       data: { metrics },
@@ -27,6 +34,7 @@ exports.getEyeMetrics = async (req, res) => {
   }
 };
 
+// Update Eye Metrics
 exports.updateEyeMetrics = async (req, res) => {
   try {
     const updatedMetric = await EyeMetric.findByIdAndUpdate(
@@ -34,7 +42,7 @@ exports.updateEyeMetrics = async (req, res) => {
       req.body,
       {
         new: true,
-        runValidators: true, // Ensure model validation
+        runValidators: true,
       }
     );
     res.status(200).json({
@@ -46,6 +54,7 @@ exports.updateEyeMetrics = async (req, res) => {
   }
 };
 
+// Delete Eye Metric
 exports.deleteEyeMetric = async (req, res) => {
   try {
     const metric = await EyeMetric.findByIdAndDelete(req.params.id);
@@ -54,20 +63,38 @@ exports.deleteEyeMetric = async (req, res) => {
         .status(404)
         .json({ status: "fail", message: "Metric not found" });
     }
-    res.status(204).json({ status: "success", data: null }); // 204 means no content
+    res.status(204).json({ status: "success", data: null });
   } catch (err) {
     res.status(400).json({ status: "fail", message: err.message });
   }
 };
-exports.getUserHistory = async (req, res) => {
+
+// Get Eye Metrics Graph Data
+exports.getEyeMetricsGraph = async (req, res) => {
   try {
-    const history = await EyeMetric.find({ user: req.user.id })
-      .sort({ createdAt: 1 }) // Sort by date (oldest to newest)
-      .select("createdAt cholesterol glucose bloodPressure"); // Fetch only relevant fields
+    const data = await EyeMetric.aggregate([
+      {
+        $match: {
+          user: mongoose.Types.ObjectId(req.user.id),
+        },
+      },
+      {
+        $sort: { date: 1 },
+      },
+      {
+        $project: {
+          date: {
+            $dateToString: { format: "%Y-%m-%d", date: "$date" },
+          },
+          rightEye: "$rightEye",
+          leftEye: "$leftEye",
+        },
+      },
+    ]);
 
     res.status(200).json({
       status: "success",
-      data: { history },
+      data: { metrics: data },
     });
   } catch (err) {
     res.status(400).json({ status: "fail", message: err.message });

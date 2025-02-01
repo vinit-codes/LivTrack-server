@@ -5,10 +5,8 @@ const User = require("../userModels/userModel");
 exports.registerUser = async (req, res) => {
   const { name, email, password, age, weight, height } = req.body;
   try {
-    // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create a new user with age, weight, and height
     const newUser = new User({
       name,
       email,
@@ -18,10 +16,7 @@ exports.registerUser = async (req, res) => {
       height,
     });
 
-    // Save the new user to the database
     await newUser.save();
-
-    // Return success message
     res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -46,7 +41,6 @@ exports.loginUser = async (req, res) => {
 
 exports.getProfile = async (req, res) => {
   try {
-    // Extract the token from the Authorization header
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) {
       return res
@@ -54,10 +48,8 @@ exports.getProfile = async (req, res) => {
         .json({ message: "Unauthorized: Token is missing" });
     }
 
-    // Verify the JWT token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET); // Use your actual JWT secret here
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Fetch the user from the database using the ID from the decoded token
     const user = await User.findById(
       decoded.id,
       "name email age weight height"
@@ -67,7 +59,6 @@ exports.getProfile = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Return the user details, including age, weight, and height
     res.status(200).json({
       name: user.name,
       email: user.email,
@@ -77,6 +68,72 @@ exports.getProfile = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in getProfile:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Update Basic Info (Age, Height, Weight)
+exports.updateBasicInfo = async (req, res) => {
+  try {
+    const { age, weight, height } = req.body;
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token) {
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: Token is missing" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.age = age || user.age;
+    user.weight = weight || user.weight;
+    user.height = height || user.height;
+    await user.save();
+
+    res.status(200).json({ message: "Basic info updated successfully" });
+  } catch (error) {
+    console.error("Error updating basic info:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Update Security Info (Name, Email, Password)
+exports.updateSecurityInfo = async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token) {
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: Token is missing" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (name) user.name = name;
+    if (email) user.email = email;
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      user.password = hashedPassword;
+    }
+
+    await user.save();
+
+    res.status(200).json({ message: "Security info updated successfully" });
+  } catch (error) {
+    console.error("Error updating security info:", error.message);
     res.status(500).json({ message: "Server error" });
   }
 };

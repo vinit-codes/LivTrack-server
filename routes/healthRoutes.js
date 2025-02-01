@@ -12,6 +12,7 @@ router.post(
   authMiddleware.protect,
   eyeMetricsController.addEyeMetrics
 );
+
 router.get(
   "/eye-metrics",
   authMiddleware.protect,
@@ -26,7 +27,7 @@ router.put(
 router.get(
   "/eye-metrics-graph",
   authMiddleware.protect,
-  eyeMetricsController.getUserHistory
+  eyeMetricsController.getEyeMetricsGraph
 );
 
 router.delete(
@@ -41,6 +42,7 @@ router.post(
   authMiddleware.protect,
   cholesterolMetricsController.addCholesterolMetrics
 );
+
 router.get(
   "/cholesterol-metrics",
   authMiddleware.protect,
@@ -57,9 +59,9 @@ router.delete(
   cholesterolMetricsController.deleteCholesterolMetric
 );
 router.get(
-  "/cholesterol-metrics",
+  "/cholesterol-metrics-graph",
   authMiddleware.protect,
-  cholesterolMetricsController.getUserHistory
+  cholesterolMetricsController.getCholesterolMetricsGraph
 );
 
 // Blood Metrics Routes
@@ -76,7 +78,7 @@ router.get(
 router.get(
   "/blood-metrics-graph",
   authMiddleware.protect,
-  bloodMetricsController.getUserHistory
+  bloodMetricsController.getBloodMetricsGraph
 );
 router.delete(
   "/blood-metrics/:id",
@@ -111,9 +113,9 @@ router.delete(
   pcosController.deletePcosMetrics
 );
 router.get(
-  "/pcos-metrics",
+  "/pcos-metrics-graph",
   authMiddleware.protect,
-  pcosController.getUserHistory
+  pcosController.getpcosMetricsGraph
 );
 
 module.exports = router;

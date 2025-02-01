@@ -19,7 +19,11 @@ exports.addPcosMetrics = async (req, res) => {
 // Get All PCOS/PCOD Metrics for a User
 exports.getPcosMetrics = async (req, res) => {
   try {
-    const metrics = await PcosPcod.find({ user: req.user.id });
+    const filter = { user: req.user.id };
+    if (req.query.date) {
+      filter.date = req.query.date;
+    }
+    const metrics = await PcosPcod.find(filter).sort({ createdAt: 1 });
     res.status(200).json({
       status: "success",
       data: { metrics },
@@ -28,7 +32,6 @@ exports.getPcosMetrics = async (req, res) => {
     res.status(400).json({ status: "fail", message: err.message });
   }
 };
-
 // Update a Specific PCOS/PCOD Metric
 exports.updatePcosMetrics = async (req, res) => {
   try {
@@ -72,28 +75,35 @@ exports.deletePcosMetrics = async (req, res) => {
   }
 };
 
-exports.deletePcosMetric = async (req, res) => {
+exports.getpcosMetricsGraph = async (req, res) => {
   try {
-    const metric = await EyeMetric.findByIdAndDelete(req.params.id);
-    if (!metric) {
-      return res
-        .status(404)
-        .json({ status: "fail", message: "Metric not found" });
-    }
-    res.status(204).json({ status: "success", data: null }); // 204 means no content
-  } catch (err) {
-    res.status(400).json({ status: "fail", message: err.message });
-  }
-};
-exports.getUserHistory = async (req, res) => {
-  try {
-    const history = await EyeMetric.find({ user: req.user.id })
-      .sort({ createdAt: 1 }) // Sort by date (oldest to newest)
-      .select("createdAt cholesterol glucose bloodPressure"); // Fetch only relevant fields
-
+    const data = await PcosPcod.aggregate([
+      {
+        $match: {
+          user: mongoose.Types.ObjectId(req.user.id),
+        },
+      },
+      {
+        $sort: { createdAt: 1 },
+      },
+      {
+        $project: {
+          date: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          hormones: 1,
+          thyroid: 1,
+          glucoseInsulin: 1,
+          prolactin: 1,
+          healthMetrics: 1,
+          lipidProfile: 1,
+          ultrasoundFindings: 1,
+          testType: 1,
+          source: 1,
+        },
+      },
+    ]);
     res.status(200).json({
       status: "success",
-      data: { history },
+      data: { metrics: data },
     });
   } catch (err) {
     res.status(400).json({ status: "fail", message: err.message });

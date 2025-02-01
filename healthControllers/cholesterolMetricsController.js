@@ -1,50 +1,51 @@
+const mongoose = require("mongoose");
 const CholesterolMetric = require("../healthModels/cholesterolMetricModel");
 
+// Add Cholesterol Metrics
 exports.addCholesterolMetrics = async (req, res) => {
   try {
     const newMetric = await CholesterolMetric.create({
       ...req.body,
       user: req.user.id,
     });
-    res.status(201).json({
-      status: "success",
-      data: { metric: newMetric },
-    });
+    res.status(201).json({ status: "success", data: { metric: newMetric } });
   } catch (err) {
     res.status(400).json({ status: "fail", message: err.message });
   }
 };
 
+// Get Cholesterol Metrics (with optional date filter)
 exports.getCholesterolMetrics = async (req, res) => {
   try {
-    const metrics = await CholesterolMetric.find({ user: req.user.id });
-    res.status(200).json({
-      status: "success",
-      data: { metrics },
-    });
+    let filter = { user: req.user.id };
+    if (req.query.date) {
+      filter.date = new Date(req.query.date); // Fetch by specific date
+    }
+
+    const metrics = await CholesterolMetric.find(filter).sort({ date: 1 });
+    res.status(200).json({ status: "success", data: { metrics } });
   } catch (err) {
     res.status(400).json({ status: "fail", message: err.message });
   }
 };
 
+// Update Cholesterol Metrics
 exports.updateCholesterolMetrics = async (req, res) => {
   try {
     const updatedMetric = await CholesterolMetric.findByIdAndUpdate(
       req.params.id,
       req.body,
-      {
-        new: true,
-        runValidators: true, // Ensure model validation
-      }
+      { new: true, runValidators: true }
     );
-    res.status(200).json({
-      status: "success",
-      data: { metric: updatedMetric },
-    });
+    res
+      .status(200)
+      .json({ status: "success", data: { metric: updatedMetric } });
   } catch (err) {
     res.status(400).json({ status: "fail", message: err.message });
   }
 };
+
+// Delete Cholesterol Metric
 exports.deleteCholesterolMetric = async (req, res) => {
   try {
     const metric = await CholesterolMetric.findByIdAndDelete(req.params.id);
@@ -53,20 +54,74 @@ exports.deleteCholesterolMetric = async (req, res) => {
         .status(404)
         .json({ status: "fail", message: "Metric not found" });
     }
-    res.status(204).json({ status: "success", data: null }); // 204 means no content
+    res.status(204).json({ status: "success", data: null }); // 204 = No Content
   } catch (err) {
     res.status(400).json({ status: "fail", message: err.message });
   }
 };
-exports.getUserHistory = async (req, res) => {
+
+// Get Cholesterol Metrics Graph (Trends Over Time)
+exports.getCholesterolMetricsGraph = async (req, res) => {
   try {
-    const history = await CholesterolMetric.find({ user: req.user.id })
-      .sort({ createdAt: 1 }) // Sort by date (oldest to newest)
-      .select("createdAt cholesterol glucose bloodPressure"); // Fetch only relevant fields
+    const data = await CholesterolMetric.aggregate([
+      {
+        $match: { user: new mongoose.Types.ObjectId(req.user.id) },
+      },
+      { $sort: { date: 1 } },
+      {
+        $project: {
+          date: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
+          ldl: { $arrayElemAt: ["$cholesterolLevels.ldl", -1] },
+          hdl: { $arrayElemAt: ["$cholesterolLevels.hdl", -1] },
+          triglycerides: {
+            $arrayElemAt: ["$cholesterolLevels.triglycerides", -1],
+          },
+          units: "$units", // Ensure units are included
+        },
+      },
+      {
+        $group: {
+          _id: "$date",
+          ldl: { $last: "$ldl" },
+          hdl: { $last: "$hdl" },
+          triglycerides: { $last: "$triglycerides" },
+          units: { $first: "$units" }, // Use $first to retain units if available
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          date: "$_id",
+          ldl: 1,
+          hdl: 1,
+          triglycerides: 1,
+          units: {
+            $ifNull: [
+              "$units",
+              {
+                totalCholesterol: "mg/dL",
+                ldl: "mg/dL",
+                hdl: "mg/dL",
+                triglycerides: "mg/dL",
+                vldl: "mg/dL",
+                nonHdlCholesterol: "mg/dL",
+              },
+            ],
+          },
+        },
+      },
+    ]);
 
     res.status(200).json({
       status: "success",
-      data: { history },
+      data: {
+        metrics: data,
+        referenceUnits: {
+          ldl: "mg/dL",
+          hdl: "mg/dL",
+          triglycerides: "mg/dL",
+        },
+      },
     });
   } catch (err) {
     res.status(400).json({ status: "fail", message: err.message });

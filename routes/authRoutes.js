@@ -5,5 +5,15 @@ const authMiddleware = require("../middleware/authMiddleware");
 
 router.post("/register", authController.registerUser);
 router.post("/login", authController.loginUser);
-router.get("/dashBoard", authMiddleware.protect, authController.getProfile);
+router.get("/profile", authMiddleware.protect, authController.getProfile);
+router.patch(
+  "/update-basic-info",
+  authMiddleware.protect,
+  authController.updateBasicInfo
+);
+router.patch(
+  "/update-security-info",
+  authMiddleware.protect,
+  authController.updateSecurityInfo
+);
 module.exports = router;
