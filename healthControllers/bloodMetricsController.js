@@ -24,7 +24,7 @@ exports.getBloodMetrics = async (req, res) => {
       filter.date = new Date(req.query.date); // Fetch by specific date
     }
 
-    const metrics = await BloodMetric.find(filter);
+    const metrics = await BloodMetric.find(filter).sort({ date: 1 });
 
     res.status(200).json({
       status: "success",
