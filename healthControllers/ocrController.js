@@ -1,80 +1,11 @@
-// const vision = require("@google-cloud/vision");
-// const fetch = require("node-fetch"); // For making HTTP requests to Hugging Face API
-
-// // Instantiates a client for Google Vision API
-// const client = new vision.ImageAnnotatorClient();
-
-// // Hugging Face API URL for Text Generation
-// const HUGGING_FACE_URL = "https://api-inference.huggingface.co/models/gpt2"; // Change to the appropriate Hugging Face model URL
-
-// const HUGGING_FACE_API_KEY = "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"; // Replace with your actual Hugging Face API key
-
-// const extractTextAndParameters = async (req, res) => {
-//   try {
-//     // Check if file exists
-//     if (!req.file) {
-//       return res.status(400).json({ error: "No file uploaded" });
-//     }
-
-//     // Convert image buffer to Base64
-//     const base64Image = req.file.buffer.toString("base64");
-//     const image = {
-//       content: base64Image,
-//     };
-
-//     // Perform text detection using Google Vision API
-//     const [result] = await client.textDetection({ image });
-//     const ocrText = result.fullTextAnnotation
-//       ? result.fullTextAnnotation.text
-//       : "";
-
-//     // Log the extracted text
-//     console.log("Extracted Text:", ocrText);
-
-//     // Send the extracted text to Hugging Face for further processing
-//     const response = await fetch(HUGGING_FACE_URL, {
-//       method: "POST",
-//       headers: {
-//         Authorization: `Bearer ${HUGGING_FACE_API_KEY}`, // Using the hardcoded Hugging Face API key
-//         "Content-Type": "application/json",
-//       },
-//       body: JSON.stringify({
-//         inputs: ocrText,
-//       }),
-//     });
-
-//     // Check if the response is successful
-//     if (!response.ok) {
-//       return res.status(500).json({ error: "Hugging Face API error" });
-//     }
-
-//     const data = await response.json();
-//     console.log("Hugging Face Response:", data);
-
-//     // Return the extracted text and insights from Hugging Face
-//     res.status(200).json({
-//       text: ocrText,
-//       hugggingFaceResponse: data,
-//     });
-//   } catch (error) {
-//     console.error("Error:", error);
-//     res.status(500).json({ error: "Failed to extract text and parameters" });
-//   }
-// };
-
-// module.exports = {
-//   extractTextAndParameters,
-// };
-
-//////////////
-
 const vision = require("@google-cloud/vision");
+const CholesterolTestMetric = require("../healthModels/cholesterolMetricModel"); // Import the Mongoose model
 const { extractHealthParameters } = require("../utils/textParser"); // Helper function to parse health data
 
 // Instantiates a client for Google Vision API
 const client = new vision.ImageAnnotatorClient();
 
-const extractTextAndParameters = async (req, res) => {
+const cholesterolExtractTextAndSaveToDB = async (req, res) => {
   try {
     // Check if file exists
     if (!req.file) {
@@ -83,9 +14,7 @@ const extractTextAndParameters = async (req, res) => {
 
     // Convert image buffer to Base64
     const base64Image = req.file.buffer.toString("base64");
-    const image = {
-      content: base64Image,
-    };
+    const image = { content: base64Image };
 
     // Perform text detection using Google Vision API
     const [result] = await client.textDetection({ image });
@@ -93,20 +22,73 @@ const extractTextAndParameters = async (req, res) => {
       ? result.fullTextAnnotation.text
       : "";
 
-    // Log the extracted text
     console.log("Extracted Text:", ocrText);
 
-    // Extract health parameters from OCR text
+    // Extract health parameters
     const healthParameters = extractHealthParameters(ocrText);
 
-    // Return extracted text and health parameters
-    res.status(200).json({ text: ocrText, healthParameters });
+    if (
+      !healthParameters ||
+      !healthParameters.metrics ||
+      !healthParameters.metrics.lipidProfile
+    ) {
+      return res
+        .status(400)
+        .json({ error: "No cholesterol data found in report" });
+    }
+
+    // Extract relevant cholesterol data
+    const lipidProfile = healthParameters.metrics.lipidProfile;
+
+    // Create a new CholesterolTestMetric document
+    const cholesterolTest = new CholesterolTestMetric({
+      user: req.user.id, // Assuming user info is in req.user
+      cholesterolLevels: {
+        totalCholesterol: lipidProfile.TotalCholesterol
+          ? [lipidProfile.TotalCholesterol.value]
+          : [],
+        ldl: lipidProfile.LDL ? [lipidProfile.LDL.value] : [],
+        hdl: lipidProfile.HDL ? [lipidProfile.HDL.value] : [],
+        triglycerides: lipidProfile.Triglycerides
+          ? [lipidProfile.Triglycerides.value]
+          : [],
+        vldl: lipidProfile.VLDL ? [lipidProfile.VLDL.value] : [],
+        nonHdlCholesterol: lipidProfile.NonHDL
+          ? [lipidProfile.NonHDL.value]
+          : [],
+      },
+      units: {
+        totalCholesterol: lipidProfile.TotalCholesterol
+          ? lipidProfile.TotalCholesterol.unit
+          : "",
+        ldl: lipidProfile.LDL ? lipidProfile.LDL.unit : "",
+        hdl: lipidProfile.HDL ? lipidProfile.HDL.unit : "",
+        triglycerides: lipidProfile.Triglycerides
+          ? lipidProfile.Triglycerides.unit
+          : "",
+        vldl: lipidProfile.VLDL ? lipidProfile.VLDL.unit : "",
+        nonHdlCholesterol: lipidProfile.NonHDL ? lipidProfile.NonHDL.unit : "",
+      },
+      source: "OCR", // Indicating the data came from OCR processing
+      testMethod: "Blood Test", // Placeholder, can be modified if test method is available in extracted text
+      reportGeneratedBy: "", // Extract if available
+      reportComments: "", // Extract if available
+      testLocation: "", // Extract if available
+    });
+
+    // Save to database
+    await cholesterolTest.save();
+
+    // Respond with saved data
+    res.status(200).json({
+      message: "Cholesterol test data saved successfully",
+      extractedText: ocrText,
+      savedData: cholesterolTest,
+    });
   } catch (error) {
-    console.error("Google Vision API Error:", error);
-    res.status(500).json({ error: "Failed to extract text and parameters" });
+    console.error("Error processing OCR and saving data:", error);
+    res.status(500).json({ error: "Failed to extract and save data" });
   }
 };
 
-module.exports = {
-  extractTextAndParameters,
-};
+module.exports = { cholesterolExtractTextAndSaveToDB };

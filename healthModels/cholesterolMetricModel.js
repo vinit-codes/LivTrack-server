@@ -35,12 +35,12 @@ const cholesterolTestSchema = new mongoose.Schema({
     },
   },
   units: {
-    totalCholesterol: String,
-    ldl: String,
-    hdl: String,
-    triglycerides: String,
-    vldl: String, // Added unit for VLDL
-    nonHdlCholesterol: String, // Added unit for non-HDL cholesterol
+    totalCholesterol: { type: String, default: "mg/dL" },
+    ldl: { type: String, default: "mg/dL" },
+    hdl: { type: String, default: "mg/dL" },
+    triglycerides: { type: String, default: "mg/dL" },
+    vldl: { type: String, default: "mg/dL" },
+    nonHdlCholesterol: { type: String, default: "mg/dL" },
   },
   referenceRanges: {
     totalCholesterol: String,
