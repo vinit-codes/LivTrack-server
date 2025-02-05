@@ -1,11 +1,32 @@
+// const multer = require("multer");
+
+// // Set storage options (in-memory storage for simplicity)
+// const storage = multer.memoryStorage();
+
+// // File upload settings
+// const upload = multer({
+//   storage: storage,
+//   fileFilter: (req, file, cb) => {
+//     if (!file.mimetype.startsWith("image/")) {
+//       return cb(new Error("Only image files are allowed"), false);
+//     }
+//     cb(null, true);
+//   },
+// });
+
+// // Middleware function for handling uploads
+// module.exports = upload; // 'image' is the field name in the form
+
+////////
+
 const multer = require("multer");
 
-// Set storage options (in-memory storage for simplicity)
+// Set up storage (in-memory for quick processing)
 const storage = multer.memoryStorage();
 
-// File upload settings
+// Configure Multer with file filter
 const upload = multer({
-  storage: storage,
+  storage,
   fileFilter: (req, file, cb) => {
     if (!file.mimetype.startsWith("image/")) {
       return cb(new Error("Only image files are allowed"), false);
@@ -14,5 +35,5 @@ const upload = multer({
   },
 });
 
-// Middleware function for handling uploads
-module.exports = upload; // 'image' is the field name in the form
+// Export multer instance (not `upload.single(...)` directly)
+module.exports = upload;

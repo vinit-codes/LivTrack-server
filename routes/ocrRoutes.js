@@ -4,15 +4,14 @@ const {
   cholesterolExtractTextAndSaveToDB,
 } = require("../healthControllers/ocrController");
 const upload = require("../middleware/uploadMiddleware");
-
 const authMiddleware = require("../middleware/authMiddleware");
 
 // POST route to upload a test report
 router.post(
   "/upload-report",
-  upload.single("reportFile"),
-  authMiddleware.protect,
-  cholesterolExtractTextAndSaveToDB
+  authMiddleware.protect, // 🟢 Authenticate First
+  upload.single("reportFile"), // 📤 Upload File After Authentication
+  cholesterolExtractTextAndSaveToDB // 🎯 Process OCR & Save Data
 );
 
 module.exports = router;
